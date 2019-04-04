@@ -1,10 +1,3 @@
-/*
-  TODO:
-  - change variable names
-  - 
-
-*/
-
 import React, { Component } from 'react';
 import './App.css';
 
@@ -17,23 +10,6 @@ class App extends Component {
       gameboard: [],
       hits: 0,
       misses: 0,
-      ships: {
-        "carrier": {
-          "size":5,
-        },
-        "battleship": {
-          "size":4,
-        },
-        "cruiser": {
-          "size":3,
-        },
-        "submarine": {
-          "size":3,
-        },
-        "destroyer": {
-          "size":2,
-        }
-      }
     }
   }
 
@@ -47,57 +23,71 @@ class App extends Component {
     const rows = [];
     for (let i = 1; i < elements.length; i++) rows.push(elements[i]);
 
-    const gameboard = [];
-    for (let i = 0; i < rows.length; i++) {
-      let row = [];
-      for (let j = 1; j < rows[i].children.length; j++) row.push(rows[i].children[j]);
-      gameboard.push(row);
-    }
-
     const cells = [];
     for (let i = 0; i < rows.length; i++) {
       for (let j = 1; j < rows[i].children.length; j++) cells.push(rows[i].children[j]);
     }
-
-    this.setState({ cells, gameboard }, () => this.addShips());
 
     cells.forEach((elem) => {
       elem.addEventListener("click", () => {
         this.check(elem);
       });
     }, this);
+
+    const gameboard = [];
+    for (let i = 0; i < rows.length; i++) {
+      let row = [];
+      for (let j = 1; j < rows[i].children.length; j++) row.push(rows[i].children[j].id);
+      gameboard.push(row);
+    }
+
+    this.setState({ cells, gameboard }, () => this.addShips());
   }
 
   addShips = () => {
     console.log('adding ships');
     const ships = [5, 4, 3, 3, 2];
-    const gameboard = this.state.gameboard;
-    console.log(gameboard);
+    let positions = [];
+    let i = 0;
 
-    for (let i = 0; i < ships.length; i++) { // loop through ships
+    for (i; i < ships.length; i++) { // loop through ships
       const direction = Math.floor(Math.random() * 2); // 0 = horizontal, 1 = vertical
+      const shipPosition = [];
 
       if (direction === 0) {
         console.log('horizontal!')
-        let randomRow = Math.floor(Math.random() * 10); // randomize the row
-        let randomStartColumn = Math.floor(Math.random() * (10-ships[i])); // randomize the start column. ship size taken in account so it will not overlap the gameboard.
-        const row = gameboard[randomRow];
+        let row = Math.floor(Math.random() * 10); // randomize the row
+        let column = Math.floor(Math.random() * (10-ships[i])); // randomize the start column. ship size taken in account.
 
-        console.log(`ship size: ${ships[i]}, starting position: ${randomRow}${randomStartColumn}`);
+        for (let j = 1; j <= ships[i]; j++) shipPosition.push(`${row}${column+j}`);
 
       } else {
         console.log('vertical!')
-        let randomRow = Math.floor(Math.random() * 10);
-        let randowStartColumn = Math.floor(Math.random() * (10-ships[i]));
-        console.log(`ship size: ${ships[i]}, starting position: ${randomRow}${randowStartColumn}`);
+        let row = Math.floor(Math.random() * (10-ships[i])); // randomize the row
+        let column = Math.floor(Math.random() * 10); // randomize the start column. ship size taken in account.
+
+        for (let j = 1; j <= ships[i]; j++) shipPosition.push(`${row+j}${column}`);
       }
+
+      let duplicate = false;
+      for (const cell of shipPosition) {
+        if (positions.indexOf(cell) !== -1) {
+          i--;
+          duplicate = true;
+          console.log(`Duplicate cell ${cell}`)
+          break;
+          
+        }
+      }
+      if (!duplicate) positions = [...positions, ...shipPosition];
     }
+    this.setState({ positions });
   }
 
   check = (elem) => {
     const positions = this.state.positions;
-    console.log(elem.id)
-    const found = positions.filter(position => position == elem.id);
+
+    const found = positions.filter(position => position === elem.id);
     if (found.length !== 0) {
       elem.style.backgroundColor = "red";
       this.setState({ hits: this.state.hits + 1 });
@@ -120,10 +110,8 @@ class App extends Component {
           </div>
         </div>
         <div className="game-board">
-        {/*
-        {this.state.misses === 10 ? <h1 className="game-announcement">YOU LOST</h1> : null}
-        {this.state.hits === 5 ? <h1 className="game-announcement">YOU WON!!</h1> : null}
-        */}
+        {/*{this.state.misses === 10 ? <h1 className="game-announcement">YOU LOST</h1> : null}*/}
+        {this.state.hits === this.state.positions.length ? <h1 className="game-announcement">YOU WON!!</h1> : null}
           <table>
             <tbody>
               <tr>
